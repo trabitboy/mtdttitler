@@ -19,6 +19,11 @@ function composescreen(tgt,ls,x,y)
 end
 
 
+function rendertitling()
+	
+
+end
+
 --TODO zoom later?
 -- takes 2 image datas and coords, copies alpha
 function softcompose( tgt , src, x, y )

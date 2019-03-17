@@ -8,7 +8,8 @@ boxfocus=nil
 hdlw=32
 hdlh=32
 
-
+--for text
+dfltzoom =0.3
 
 local function drag(b,dx,dy)
 	if b.mode=="drag" then
@@ -51,8 +52,29 @@ local function click(b,mx,my)
 	return false
 end
 
+local function addtext(b,txt)
+	b.buffer[b.line]=b.buffer[b.line]..txt
+end
 
-local function render(b)
+local function editkey(b,key)
+	if key=='return' then
+		print('ed k')
+		table.insert(b.buffer,"new")
+		b.line=b.line+1
+	end
+	if key=='backspace' then
+		b.buffer[b.line]=b.buffer[b.line]:sub(1, -2)
+	end
+
+end
+
+-- function removeLastChar (string)
+  -- return string:sub(1, -2)
+-- end
+
+
+
+local function tbrender(b)
 	love.graphics.setColor(0.0,1.0,0.0,1.0)
 	if b==boxfocus then
 		love.graphics.setColor(1.0,0.0,0.0,1.0)
@@ -64,6 +86,35 @@ local function render(b)
 	love.graphics.rectangle("fill",b.x+b.w,b.y+b.h,hdlw,hdlh)
 	-- b.text.render(b.text,b.x,b.y)
 	
+	
+	love.graphics.setColor(1.0,1.0,1.0,1.0)
+	y=0
+	for i,l in ipairs(b.buffer)
+	do
+		x=0
+	
+		for i = 1, #l do
+			local c = l:sub(i,i)
+			-- do something with c
+			if typo[c]~=nil then
+				love.graphics.draw(typo[c].pic,b.x+x,b.y+y,0,b.tzoom,b.tzoom)
+			end
+			x=x+(tw/2)*b.tzoom
+			-- if x>(b.w-(tw/2)*b.tzoom) then
+			if x>b.w-((tw/2)*b.tzoom) then
+				x=0
+				-- y=y+th*b.tzoom
+				y=y+th*b.tzoom
+			end
+		end
+		y=y+th*b.tzoom
+	
+	
+	
+		-- love.graphics.print(l,b.x,b.y+b.fh*i)
+		-- love.graphics.print(x,y,l)
+	end
+
 end
 
 function createtbox(x,y,w,h)
@@ -72,11 +123,19 @@ function createtbox(x,y,w,h)
 	ret.y=y
 	ret.w=w
 	ret.h=h
-	ret.render=render
+	ret.fh=16
+	
+	ret.render=tbrender
 	ret.click=click
 	ret.drag=drag
 	
-	-- ret.text=createText()
+	ret.buffer={}	
+	table.insert(ret.buffer,"")
+	ret.addtext=addtext
+	ret.editkey=editkey
+	ret.line=1
+	ret.tzoom=dfltzoom
+	
 	
 	return ret
 end

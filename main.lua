@@ -9,7 +9,7 @@ th=200
 require("lines")
 require("loadfilter")
 require("picbutton")
-require("text")
+-- require("ta")
 require("tbox")
 
 
@@ -45,15 +45,31 @@ require("softcompose")
 	
 		typo={}
 		typo['A']=loadfilter("TYPO/A.png")
+		typo['B']=loadfilter("TYPO/B.png")
+		typo['C']=loadfilter("TYPO/C.png")
 		typo['D']=loadfilter("TYPO/D.png")
 		typo['E']=loadfilter("TYPO/E.png")
+		typo['F']=loadfilter("TYPO/F.png")
+		typo['G']=loadfilter("TYPO/G.png")
 		typo['H']=loadfilter("TYPO/H.png")
+		typo['I']=loadfilter("TYPO/I.png")
+		typo['J']=loadfilter("TYPO/J.png")
+		typo['K']=loadfilter("TYPO/K.png")
 		typo['L']=loadfilter("TYPO/L.png")
 		typo['M']=loadfilter("TYPO/M.png")
 		typo['N']=loadfilter("TYPO/N.png")
-		typo['L']=loadfilter("TYPO/L.png")
 		typo['O']=loadfilter("TYPO/O.png")
 		typo['P']=loadfilter("TYPO/P.png")
+		typo['Q']=loadfilter("TYPO/Q.png")
+		typo['R']=loadfilter("TYPO/R.png")
+		typo['S']=loadfilter("TYPO/S.png")
+		typo['T']=loadfilter("TYPO/T.png")
+		typo['U']=loadfilter("TYPO/U.png")
+		typo['V']=loadfilter("TYPO/V.png")
+		typo['W']=loadfilter("TYPO/W.png")
+		typo['X']=loadfilter("TYPO/X.png")
+		typo['Y']=loadfilter("TYPO/Y.png")
+		typo['Z']=loadfilter("TYPO/Z.png")
 		
 		--create our widgets
 		plus=createpicbutton(0,0,"bplus.png",addbox )
@@ -62,12 +78,6 @@ require("softcompose")
 	end
 
 	
-	
-	love.textinput = function(key)
-	
-		print(key)
-	
-	end
 
 	
 	
@@ -100,12 +110,25 @@ end
 
 love.keypressed = function(key, code, isrepeat)
 		-- if key == 'return'then -- binding enter key to input focus
+	if boxfocus~=nil and ( key=='return' or key=='backspace' ) then
+		print(key)
+		boxfocus.editkey(boxfocus,key)
+	end
 end
 
 	
+love.textinput = function(key)
+
+	print(key)
+	if boxfocus~=nil then
+		boxfocus.addtext(boxfocus,key)
+	end
+
+end
+	
 
 function love.update(dt)
-	if love.keyboard.isDown("space") then
+	if love.keyboard.isDown("escape") then
 		to_save=love.graphics.captureScreenshot("screenshot.png")
 		-- to_save:encode("png","test.png")
 		-- softcompose(softcomposed,typo["A"].data,0,0)
@@ -146,18 +169,18 @@ function love.draw()
 	end
 	
 	-- rendertitling()
-	for j,line in ipairs(lines)
-	do
-		print(line)
-		x=0
-		for i = 1, #line do
-			local c = line:sub(i,i)
-			-- do something with c
-			love.graphics.draw(typo[c].pic,x,0)
-			x=x+40
-		end
+	-- for j,line in ipairs(lines)
+	-- do
+		-- -- print(line)
+		-- x=0
+		-- for i = 1, #line do
+			-- local c = line:sub(i,i)
+			-- -- do something with c
+			-- love.graphics.draw(typo[c].pic,x,0)
+			-- x=x+40
+		-- end
 	
-	end
+	-- end
 	-- love.graphics.print(savefld,0,200)
 end
 	

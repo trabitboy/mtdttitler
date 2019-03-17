@@ -5,6 +5,12 @@
 tw=80
 th=200
 
+--util
+function tbllngth(T)
+  local count = 0
+  for _ in pairs(T) do count = count + 1 end
+  return count
+end
 
 require("lines")
 require("loadfilter")
@@ -16,6 +22,10 @@ require("tbox")
 softcomposed= love.image.newImageData( 1920, 1080 )
 
 require("softcompose")
+
+
+
+wcount=0
 
 
 	-- text="ADEHL MNLOP"
@@ -87,6 +97,7 @@ npy=nil
 	
 	
 love.mousepressed = function(x, y, button)
+	print("mousepressed "..x.." "..y)
 	npress=true
 	npx=x
 	npy=y
@@ -102,7 +113,6 @@ end
 love.mousereleased = function(x, y, button)
 
 	registerdrag=nil
-
 end
 
 love.wheelmoved = function(x, y)
@@ -110,7 +120,7 @@ end
 
 love.keypressed = function(key, code, isrepeat)
 		-- if key == 'return'then -- binding enter key to input focus
-	if boxfocus~=nil and ( key=='return' or key=='backspace' ) then
+	if boxfocus~=nil and ( key=='return' or key=='backspace' or key=='left' or key=='right' or key=='up' or key=='down'  ) then
 		print(key)
 		boxfocus.editkey(boxfocus,key)
 	end
@@ -139,6 +149,7 @@ function love.update(dt)
 
 	--mouseclick
 	if npress==true then
+		print("propagating np")
 		for i,w in ipairs (widgets)
 		do
 			ret=w.click(w,npx,npy)
@@ -148,6 +159,10 @@ function love.update(dt)
 			end
 
 		end
+		
+		
+		print("np in void")
+		npress=false
 	end
 	
 end

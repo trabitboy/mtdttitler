@@ -50,7 +50,7 @@ local function click(b,mx,my)
 		print("click detected on id "..b.id)
 		
 		boxfocus=b
-		
+		zoom.value=b.tzoom
 		return true
 	end
 	return false
@@ -58,22 +58,41 @@ end
 
 local function addtext(b,txt)
 	b.buffer[b.line]=b.buffer[b.line]:sub(1,b.char)..txt..b.buffer[b.line]:sub(b.char+1)
-	b.char=b.char+string.len(txt)
+	-- b.char=b.char+string.len(txt)
+	b.char=b.char+1
+		print("char "..b.char)
 	-- b.char=string.len(b.buffer[b.line])
 end
 
 local function editkey(b,key)
 	if key=='return' then
-		print('ed k')
-		table.insert(b.buffer,"new")
+		-- print('ed k')
+		table.insert(b.buffer,"")
 		b.line=b.line+1
+		b.char=0
+		print("char "..b.char)
 	end
 	if key=='backspace' then
-		b.buffer[b.line]=b.buffer[b.line]:sub(1, -2)
+	
+		if b.buffer[b.line]:len()==1 then 
+			b.buffer[b.line]=""
+		else
+			-- b.buffer[b.line]=b.buffer[b.line]:sub(1, -2)
+			print("before "..b.buffer[b.line])
+			print("removing "..b.buffer[b.line]:sub(b.char,b.char))
+			nbeg=b.buffer[b.line]:sub(1,b.char-1)
+			print("nbeg "..nbeg)
+			nend=b.buffer[b.line]:sub(b.char+1)
+			print("nend "..nend)
+			b.buffer[b.line]=nbeg..nend
+			print("after "..b.buffer[b.line])
+		end
+		b.char=b.char-1
 	end
 	if key=='left' then
-		if b.char>1 then
+		if b.char>0 then
 			b.char=b.char-1
+		print("char "..b.char)
 			
 		end
 	end
@@ -83,8 +102,12 @@ local function editkey(b,key)
 		end
 	end
 	if key=='up' then
+		print ("line before "..b.line)
+
 		if b.line>1 then
 			b.line=b.line-1
+			print ("line after "..b.line)
+			
 			if b.char> string.len(b.buffer[b.line]) then
 				--end of line
 				b.char=string.len(b.buffer[b.line]) 
@@ -93,8 +116,11 @@ local function editkey(b,key)
 
 	end
 	if key=='down' then
+		print ("line before "..b.line)
 		if b.line<tbllngth(b.buffer) then
 			b.line=b.line+1
+			print ("line after "..b.line)
+			
 			if b.char> string.len(b.buffer[b.line]) then
 				--end of line
 				b.char=string.len(b.buffer[b.line]) 
@@ -148,6 +174,10 @@ local function tbrender(b)
 
 			if typo[c]~=nil then
 				love.graphics.draw(typo[c].pic,b.x+x,b.y+y,0,b.tzoom,b.tzoom)
+			elseif c==' ' then
+				
+			else
+				love.graphics.draw(typo['unknown'].pic,b.x+x,b.y+y,0,b.tzoom,b.tzoom)			
 			end
 
 			--draw marker on real carriage return
@@ -199,7 +229,7 @@ function createtbox(x,y,w,h)
 	ret.editkey=editkey
 	--current line
 	ret.line=1
-	ret.char=1
+	ret.char=0
 	ret.tzoom=dfltzoom
 	
 	

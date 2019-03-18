@@ -17,7 +17,7 @@ require("loadfilter")
 require("picbutton")
 -- require("ta")
 require("tbox")
-
+require("slider")
 
 softcomposed= love.image.newImageData( 1920, 1080 )
 
@@ -39,7 +39,7 @@ wcount=0
 
 
 		function addbox()
-			print("crotte")
+			-- print("crotte")
 			-- addtline("LOP")
 			table.insert(widgets,createtbox(100,100,100,100))
 			
@@ -80,11 +80,19 @@ wcount=0
 		typo['X']=loadfilter("TYPO/X.png")
 		typo['Y']=loadfilter("TYPO/Y.png")
 		typo['Z']=loadfilter("TYPO/Z.png")
+		typo['unknown']=loadfilter("TYPO/unknown.png")
 		
 		--create our widgets
 		plus=createpicbutton(0,0,"bplus.png",addbox )
 		table.insert(widgets,plus)
 		
+		zoom=createslider(20,400)
+		table.insert(widgets,zoom)
+		first=createtbox(100,100,300,500)
+		table.insert(widgets,first)
+		boxfocus=first
+		
+	
 	end
 
 	
@@ -183,6 +191,7 @@ function love.draw()
 	
 	end
 	
+	-- love.graphics.draw(typo['unknown'].pic,0,0)
 	-- rendertitling()
 	-- for j,line in ipairs(lines)
 	-- do

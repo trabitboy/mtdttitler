@@ -1,9 +1,19 @@
 --multiline support (add line on enter)
 -- when softcompose mix new color with old color !
 
---typo width height
+cvsw=800
+cvsh=600
+ love.window.setMode(cvsw,cvsh)
+ love.window.setTitle("mtdt titler")
+	mylt=love.graphics.newCanvas(cvsw,cvsh)
+
+--typo width height (pic size)
 tw=80
 th=200
+--meaninful area in the middle (to trim empty space)
+rtw=(tw/2)
+
+
 
 --util
 function tbllngth(T)
@@ -18,8 +28,31 @@ require("picbutton")
 -- require("ta")
 require("tbox")
 require("slider")
+require("cprlfl")
 
-softcomposed= love.image.newImageData( 1920, 1080 )
+
+-- test=splitwordandspace("caca pipi zaz prout ")
+-- for i,s in ipairs (test)
+-- do
+	-- print ('#'..s.val..'#')
+-- end
+
+-- test=simplecprlfl(5,"caca pipi zaz prout ")
+-- for i,l in ipairs (test)
+-- do
+	-- print('> line begin')
+	-- for j,s in ipairs (l)
+	-- do
+		-- print ('#'..s.val..'#')
+	-- end
+	-- print('> line end')
+-- end
+
+
+-- love.event.quit()
+
+
+-- softcomposed= love.image.newImageData( 1920, 1080 )
 
 require("softcompose")
 
@@ -46,6 +79,25 @@ wcount=0
 		end
 
 
+		function setjustifleft()
+			if boxfocus~=nil then
+				boxfocus.justif=jleft
+			end
+		end
+		
+		
+		function setjustifright()
+			if boxfocus~=nil then
+				boxfocus.justif=jright
+			end
+		end
+		
+		
+		function setjustifcenter()
+			if boxfocus~=nil then
+				boxfocus.justif=jcenter
+			end
+		end
 	
 	function love.load()
 	
@@ -85,8 +137,18 @@ wcount=0
 		--create our widgets
 		plus=createpicbutton(0,0,"bplus.png",addbox )
 		table.insert(widgets,plus)
+
+		plus=createpicbutton(0,cvsh-150,"jl.png",setjustifleft )
+		table.insert(widgets,plus)
+
+		plus=createpicbutton(0,cvsh-100,"jr.png",setjustifright )
+		table.insert(widgets,plus)
+
+		plus=createpicbutton(0,cvsh-50,"jc.png",setjustifcenter )
+		table.insert(widgets,plus)
+
 		
-		zoom=createslider(20,400)
+		zoom=createslider(20,300)
 		table.insert(widgets,zoom)
 		first=createtbox(100,100,300,500)
 		table.insert(widgets,first)
@@ -134,6 +196,9 @@ love.keypressed = function(key, code, isrepeat)
 	end
 end
 
+
+
+
 	
 love.textinput = function(key)
 
@@ -147,12 +212,27 @@ end
 
 function love.update(dt)
 	if love.keyboard.isDown("escape") then
-		to_save=love.graphics.captureScreenshot("screenshot.png")
-		-- to_save:encode("png","test.png")
-		-- softcompose(softcomposed,typo["A"].data,0,0)
-		composescreen(softcomposed,lines,0,0)
-		softcomposed:encode("png","softcomposed.png")
-		love.event.quit()
+		-- to_save=love.graphics.captureScreenshot("screenshot.png")
+		-- -- to_save:encode("png","test.png")
+		-- -- softcompose(softcomposed,typo["A"].data,0,0)
+		-- composescreen(softcomposed,lines,0,0)
+		-- softcomposed:encode("png","softcomposed.png")
+		-- love.event.quit()
+
+		love.graphics.setCanvas(mylt)
+		love.graphics.clear(1.0,1.0,1.0,0.0)
+		-- love.graphics.setColor(1.0,1.0,0.0,1.0)
+		-- love.graphics.circle("fill",100,100,50)
+		-- love.graphics.setColor(1.0,1.0,0.0,0.5)
+		-- love.graphics.circle("fill",200,200,50)
+		-- love.graphics.setColor(1.0,1.0,0.0,0.2)
+		-- love.graphics.circle("fill",300,300,50)
+		rendergui()
+
+	
+		love.graphics.setCanvas()
+		mylt:newImageData():encode("png","test.png")
+
 	end
 
 	--mouseclick
@@ -178,18 +258,27 @@ end
 	
 elapsed=false
 	
-function love.draw()
 	
-	if elapsed ==false then
-		love.graphics.captureScreenshot("dbg.png")
-		elapsed=true
-	end
-	
+function rendergui()	
 	for i,w in ipairs( widgets)
 	do
 		w.render(w)
 	
 	end
+end
+
+	
+function love.draw()
+
+
+	rendergui()
+
+	
+	-- if elapsed ==false then
+		-- love.graphics.captureScreenshot("dbg.png")
+		-- elapsed=true
+	-- end
+	
 	
 	-- love.graphics.draw(typo['unknown'].pic,0,0)
 	-- rendertitling()

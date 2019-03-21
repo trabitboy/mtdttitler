@@ -1,4 +1,9 @@
 
+--justification
+jleft='l'
+jright='r'
+jcenter='c'
+
 registerdrag=nil
 
 
@@ -19,6 +24,7 @@ local function drag(b,dx,dy)
 	if b.mode=="resize" then
 		b.w=b.w+dx
 		b.h=b.h+dy
+		maintainlpl(b)
 	end
 end
 
@@ -66,8 +72,18 @@ end
 
 local function editkey(b,key)
 	if key=='return' then
+	
+		--TODO 
+		--split current buffer in 2 !
+		
+		local cur = b.buffer[b.line]
+		first=cur:sub(1,b.char)
+		second=cur:sub(b.char+1)
+		b.buffer[b.line]=first
+		table.insert(b.buffer,b.line+1,second)
+		
 		-- print('ed k')
-		table.insert(b.buffer,"")
+		-- table.insert(b.buffer,"")
 		b.line=b.line+1
 		b.char=0
 		print("char "..b.char)
@@ -137,24 +153,104 @@ end
 
 
 
-local function tbrender(b)
-	love.graphics.setColor(0.0,1.0,0.0,1.0)
-	if b==boxfocus then
-		love.graphics.setColor(1.0,0.0,0.0,1.0)
+
+-- ONLY FROM LEFT
+local function writeseg(seg,b,x,linetotal)
+	for i = 1, #(seg.val) do
+		
+		local c = seg.val:sub(i,i)
+		if typo[c]~=nil then
+			love.graphics.draw(typo[c].pic,b.x+x,b.y+y,0,b.tzoom,b.tzoom)
+		elseif c==' ' then
+			
+		else
+			love.graphics.draw(typo['unknown'].pic,b.x+x,b.y+y,0,b.tzoom,b.tzoom)			
+		end
+		x=x+rtw*b.tzoom
+		
+		linetotal=linetotal+1
+		--draw a cursor like line
+		if curline==b.line and linetotal==b.char then
+			love.graphics.line(b.x+x,b.y+y,b.x+x,b.y+y+th*b.tzoom)
+		end
+
+		
+	end
+	return x,linetotal
+end
+
+--used for justif
+function getrllength(b,rl)
+	local ret=0
+
+	for i,seg in ipairs(rl)
+	do
+		ret=ret+#(seg.val)
 	end
 	
 	
-	love.graphics.rectangle("fill",b.x-hdlw,b.y-hdlh,hdlw,hdlh)
-	love.graphics.rectangle("line",b.x,b.y,b.w,b.h)
-	love.graphics.rectangle("fill",b.x+b.w,b.y+b.h,hdlw,hdlh)
-	-- b.text.render(b.text,b.x,b.y)
+	ret=ret*rtw*b.tzoom
 	
+	return ret
+end
+
+
+local function justifiedtextrender(b)
+	y=0
+	curline=0
+	for i,l in ipairs(b.buffer)
+	do
+		curline=curline+1
+		--total of already written line on buffer line
+		local linetotal=0
+
+		--we get real lines
+		local rls=simplecprlfl(b.lpl,l)
+		for j,rl in ipairs(rls)
+		do
+			--draw a line under current line
+			if curline == b.line then
+				love.graphics.line(b.x,b.y+y+th*b.tzoom,b.x+b.w,b.y+y+th*b.tzoom)
+			end
+			
+			x=0
+			--TODO for justify center calculate a different x begin
+			
+			--TODO for justify right calculate x begin in offset from right border
+			if (b.justif==jright)then
+				x=b.w - getrllength(b,rl)
+			end
 	
-	love.graphics.setColor(1.0,1.0,1.0,1.0)
-	love.graphics.print(b.id,b.x-hdlw,b.y-hdlh)
+			for k,seg in ipairs(rl)
+			do
+				x,linetotal=writeseg(seg,b,x,linetotal)
+
+			end
+
+			if j==tbllngth(rl) then
+			    --draw marker on real carriage return, all seg have been drawn
+				love.graphics.line(b.x+x+tw*b.tzoom,b.y+y,b.x+x+tw*b.tzoom,b.y+y+th*b.tzoom)
+			end
+			
+			--real line finished ! automatic cr
+			x=0
+			-- y=y+th*b.tzoom
+			y=y+th*b.tzoom
+				
+		end
+
+		
+		
+	end
+
+end
+
+
+local function simpletextrender(b)
+
 	y=0
 	curline=1
-	for i,l in ipairs(b.buffer)
+	for  i,l in ipairs(b.buffer)
 	do
 		x=0
 	
@@ -164,6 +260,12 @@ local function tbrender(b)
 		end
 	
 		for i = 1, #l do
+		
+		
+			--TODO justification calculation : what is the line width,
+			--how many words do fit
+			--return segments of word {word} and render them
+		
 			local c = l:sub(i,i)
 			-- do something with c
 
@@ -186,7 +288,7 @@ local function tbrender(b)
 			end
 
 			-- prepare coords for next char in line
-			x=x+(tw/2)*b.tzoom
+			x=x+rtw*b.tzoom
 			-- if x>(b.w-(tw/2)*b.tzoom) then
 			if x>b.w-((tw/2)*b.tzoom) then
 				x=0
@@ -206,6 +308,38 @@ local function tbrender(b)
 	end
 
 end
+
+
+local function tbrender(b)
+	love.graphics.setColor(0.0,1.0,0.0,1.0)
+	if b==boxfocus then
+		love.graphics.setColor(1.0,0.0,0.0,1.0)
+	end
+	
+	
+	love.graphics.rectangle("fill",b.x-hdlw,b.y-hdlh,hdlw,hdlh)
+	love.graphics.rectangle("line",b.x,b.y,b.w,b.h)
+	love.graphics.rectangle("fill",b.x+b.w,b.y+b.h,hdlw,hdlh)
+	-- b.text.render(b.text,b.x,b.y)
+
+	love.graphics.setColor(1.0,1.0,1.0,1.0)
+	-- simpletextrender(b)
+	justifiedtextrender(b)
+	
+	love.graphics.setColor(1.0,1.0,1.0,1.0)
+	love.graphics.print(b.id,b.x-hdlw,b.y-hdlh)
+
+end
+
+
+--after modifying zoom
+-- prerequisite to justify text
+function maintainlpl(b)
+	--calulate char per line
+	b.lpl=math.floor(b.w/(rtw*b.tzoom))
+	print("lpl "..b.lpl)
+end
+
 
 function createtbox(x,y,w,h)
 	ret={}
@@ -231,6 +365,9 @@ function createtbox(x,y,w,h)
 	ret.line=1
 	ret.char=0
 	ret.tzoom=dfltzoom
+	-- ret.justif=jleft
+	ret.justif=jright
+	maintainlpl(ret)
 	
 	
 	return ret

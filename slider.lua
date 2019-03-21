@@ -29,7 +29,7 @@ local function drag(s,dx,dy)
 		
 		if boxfocus~=nil then
 			boxfocus.tzoom=s.value
-		
+			maintainlpl(boxfocus)
 		end
 
 end

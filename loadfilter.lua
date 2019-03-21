@@ -12,13 +12,13 @@ function loadfilter(fname)
 	-- print
 	
 
-	print("loaded im dat format "..tofilter:getFormat())
+	-- print("loaded im dat format "..tofilter:getFormat())
 	
 	todisp=love.image.newImageData(
 						tofilter:getWidth(),
 						tofilter:getHeight())
 
-	print("created im dat format "..tofilter:getFormat())
+	-- print("created im dat format "..tofilter:getFormat())
 						
 						
 	for j=0,tofilter:getHeight()-1

@@ -1,10 +1,22 @@
 --multiline support (add line on enter)
 -- when softcompose mix new color with old color !
 
-cvsw=800
-cvsh=600
- love.window.setMode(cvsw,cvsh)
+require("conf")
+
+renderdecos=true
+
+cvsw=1920
+cvsh=1080
+ -- cvsw=ww
+ -- cvsh=wh
+ love.window.setMode(ww,wh,{resizable=true})
+ 
+ scrsx=ww/cvsw
+ scrsy=wh/cvsh
+  
+ 
  love.window.setTitle("mtdt titler")
+ --r to tex
 	mylt=love.graphics.newCanvas(cvsw,cvsh)
 
 --typo width height (pic size)
@@ -13,6 +25,21 @@ th=200
 --meaninful area in the middle (to trim empty space)
 rtw=(tw/2)
 
+function love.resize( nw, nh )
+	local npw,nph=love.window.toPixels( nw, nh )
+	ww=npw
+	wh=nph
+	local pscrsx=ww/cvsw
+	local pscrsy=wh/cvsh
+	if pscrsx>pscrsy then
+		scrsy=pscrsy
+		scrsx=pscrsy
+	else
+		scrsy=pscrsx
+		scrsx=pscrsx
+	
+	end
+end
 
 
 --util
@@ -169,8 +196,10 @@ npy=nil
 love.mousepressed = function(x, y, button)
 	print("mousepressed "..x.." "..y)
 	npress=true
-	npx=x
-	npy=y
+	npx=x/scrsx
+	npy=y/scrsy
+	print("mousepressed scaled "..npx.." "..npy)
+	
 	
 end
 
@@ -188,12 +217,19 @@ end
 love.wheelmoved = function(x, y)
 end
 
+
+
 love.keypressed = function(key, code, isrepeat)
 		-- if key == 'return'then -- binding enter key to input focus
 	if boxfocus~=nil and ( key=='return' or key=='backspace' or key=='left' or key=='right' or key=='up' or key=='down'  ) then
 		print(key)
 		boxfocus.editkey(boxfocus,key)
 	end
+	
+	if key=="f1" then
+		renderdecos= not renderdecos
+	end
+	
 end
 
 
@@ -208,29 +244,22 @@ love.textinput = function(key)
 	end
 
 end
-	
+
+function rendertocanvas()
+		love.graphics.setCanvas(mylt)
+		love.graphics.clear(1.0,1.0,1.0,0.0)
+		rendergui()
+		love.graphics.setCanvas()
+end	
 
 function love.update(dt)
 	if love.keyboard.isDown("escape") then
-		-- to_save=love.graphics.captureScreenshot("screenshot.png")
-		-- -- to_save:encode("png","test.png")
-		-- -- softcompose(softcomposed,typo["A"].data,0,0)
-		-- composescreen(softcomposed,lines,0,0)
-		-- softcomposed:encode("png","softcomposed.png")
-		-- love.event.quit()
 
-		love.graphics.setCanvas(mylt)
-		love.graphics.clear(1.0,1.0,1.0,0.0)
-		-- love.graphics.setColor(1.0,1.0,0.0,1.0)
-		-- love.graphics.circle("fill",100,100,50)
-		-- love.graphics.setColor(1.0,1.0,0.0,0.5)
-		-- love.graphics.circle("fill",200,200,50)
-		-- love.graphics.setColor(1.0,1.0,0.0,0.2)
-		-- love.graphics.circle("fill",300,300,50)
-		rendergui()
-
-	
-		love.graphics.setCanvas()
+		rendertocanvas()
+		-- love.graphics.setCanvas(mylt)
+		-- love.graphics.clear(1.0,1.0,1.0,0.0)
+		-- rendergui()
+		-- love.graphics.setCanvas()
 		mylt:newImageData():encode("png","test.png")
 
 	end
@@ -265,36 +294,31 @@ function rendergui()
 		w.render(w)
 	
 	end
+	
+	--for debug,last click
+	if npx~=nil then
+		love.graphics.circle("fill",npx,npy,10)
+	end
+	
 end
 
 	
 function love.draw()
 
+	-- love.graphics.setCanvas(mylt)
+	-- rendergui()
+	-- love.graphics.setCanvas()
+	-- love.graphics.setColor(0.0,0.0,0.0,0.0)
+	-- love.graphics.clear()
+	 -- love.graphics.draw(mylt,0,0,0,ww,wh)
 
-	rendergui()
-
-	
-	-- if elapsed ==false then
-		-- love.graphics.captureScreenshot("dbg.png")
-		-- elapsed=true
-	-- end
-	
-	
-	-- love.graphics.draw(typo['unknown'].pic,0,0)
-	-- rendertitling()
-	-- for j,line in ipairs(lines)
-	-- do
-		-- -- print(line)
-		-- x=0
-		-- for i = 1, #line do
-			-- local c = line:sub(i,i)
-			-- -- do something with c
-			-- love.graphics.draw(typo[c].pic,x,0)
-			-- x=x+40
-		-- end
-	
-	-- end
-	-- love.graphics.print(savefld,0,200)
+	 
+	 rendertocanvas()
+	love.graphics.setColor(0.0,0.0,0.0,1.0)
+	love.graphics.clear()
+	love.graphics.setColor(1.0,1.0,1.0,1.0)
+	love.graphics.draw(mylt,0,0,0,scrsx,scrsy)
+	-- rendergui()
 end
 	
 	

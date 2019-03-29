@@ -11,7 +11,9 @@ end
 
 
 local function render(b)
-	love.graphics.draw(b.pic.pic,b.x,b.y)
+	if renderdecos==true then
+		love.graphics.draw(b.pic.pic,b.x,b.y)
+	end
 
 end
 

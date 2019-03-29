@@ -3,12 +3,13 @@ local dfltzoom=0.2
 local sheight=100
 local swidth=20
 
-function srender(s)
-	love.graphics.setColor(1.0,0.0,0.0,1.0)
-	love.graphics.rectangle("fill",s.x,s.y,swidth,sheight)
-	love.graphics.setColor(0.0,1.0,0.0,1.0)
-	love.graphics.rectangle("fill",s.x,s.y,swidth,sheight*s.value)
-
+local function render(s)
+	if renderdecos==true then
+		love.graphics.setColor(1.0,0.0,0.0,1.0)
+		love.graphics.rectangle("fill",s.x,s.y,swidth,sheight)
+		love.graphics.setColor(0.0,1.0,0.0,1.0)
+		love.graphics.rectangle("fill",s.x,s.y,swidth,sheight*s.value)
+	end
 end
 
 
@@ -55,7 +56,7 @@ function createslider(x,y)
 	ret={}
 	ret.x=x
 	ret.y=y
-	ret.render=srender
+	ret.render=render
 	ret.click=sclick
 	ret.value=dfltzoom
 	ret.drag=drag

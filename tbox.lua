@@ -156,9 +156,28 @@ end
 
 -- ONLY FROM LEFT
 local function writeseg(seg,b,x,linetotal)
+	--there is an offset since we only want to draw "rtw"
+	-- local xof = (tw-rtw/2)
+
+	
 	for i = 1, #(seg.val) do
 		
 		local c = seg.val:sub(i,i)
+		if renderdecos==true then
+			--box of real img data
+			love.graphics.setColor(0.0,1.0,0.0,1.0)
+			
+			love.graphics.rectangle("line",b.x+x,b.y+y,b.tzoom*tw,b.tzoom*th)
+
+			--box that we consider 'real'
+			love.graphics.setColor(1.0,0.0,0.0,1.0)
+			love.graphics.rectangle("line",b.x+x+((tw-rtw)*b.tzoom),b.y+y,b.tzoom*(tw-rtw),b.tzoom*th)
+
+			
+			love.graphics.setColor(1.0,1.0,1.0,1.0)
+		end
+		
+		
 		if typo[c]~=nil then
 			love.graphics.draw(typo[c].pic,b.x+x,b.y+y,0,b.tzoom,b.tzoom)
 		elseif c==' ' then
@@ -169,9 +188,11 @@ local function writeseg(seg,b,x,linetotal)
 		x=x+rtw*b.tzoom
 		
 		linetotal=linetotal+1
-		--draw a cursor like line
+		-- draw a cursor like square
 		if curline==b.line and linetotal==b.char then
-			love.graphics.line(b.x+x,b.y+y,b.x+x,b.y+y+th*b.tzoom)
+			love.graphics.setColor(1.0,1.0,1.0,0.2)
+			love.graphics.rectangle("fill",b.x+x+rtw*b.tzoom/2,b.y+y,rtw*b.tzoom,th*b.tzoom)
+			love.graphics.setColor(1.0,1.0,1.0,1.0)
 		end
 
 		
@@ -214,12 +235,24 @@ local function justifiedtextrender(b)
 			end
 			
 			x=0
-			--TODO for justify center calculate a different x begin
+
 			
+			-- TODO calculation incorrect for more than one seg ?
+			--TODO for justify center calculate a different x begin
+			if (b.justif==jcenter)then
+				x=b.w/2-getrllength(b,rl)/2
+			end
+			
+			-- TODO calculation incorrect for more than one seg ?
 			--TODO for justify right calculate x begin in offset from right border
 			if (b.justif==jright)then
 				x=b.w - getrllength(b,rl)
 			end
+	
+			--we adjust first pos for real blit
+				--we need to start offset x to remove 'blank' on left of first pic
+			x=x-((tw-rtw)/2)*b.tzoom
+
 	
 			for k,seg in ipairs(rl)
 			do
@@ -227,9 +260,11 @@ local function justifiedtextrender(b)
 
 			end
 
-			if j==tbllngth(rl) then
+			if j==tbllngth(rls) then
 			    --draw marker on real carriage return, all seg have been drawn
-				love.graphics.line(b.x+x+tw*b.tzoom,b.y+y,b.x+x+tw*b.tzoom,b.y+y+th*b.tzoom)
+				-- love.graphics.line(b.x+x+tw*b.tzoom,b.y+y,b.x+x+tw*b.tzoom,b.y+y+th*b.tzoom)
+				x=x+(tw-rtw)/2
+				love.graphics.polygon('fill',b.x+x,b.y+y+th*b.tzoom, b.x+x+rtw*b.tzoom,b.y+y+th*b.tzoom*0.75,b.x+x+rtw*b.tzoom,b.y+y+th*b.tzoom)
 			end
 			
 			--real line finished ! automatic cr
@@ -316,12 +351,23 @@ local function tbrender(b)
 		love.graphics.setColor(1.0,0.0,0.0,1.0)
 	end
 	
+	if renderdecos==true then
+		love.graphics.setLineWidth(3)
+		love.graphics.rectangle("fill",b.x-hdlw,b.y-hdlh,hdlw,hdlh)
+		love.graphics.rectangle("line",b.x,b.y,b.w,b.h)
+		love.graphics.rectangle("fill",b.x+b.w,b.y+b.h,hdlw,hdlh)
+		-- b.text.render(b.text,b.x,b.y)
+		love.graphics.setColor(0.0,0.0,1.0,1.0)
+		love.graphics.setLineWidth(1)
+		love.graphics.line(0,b.y,cvsw,b.y)
+		love.graphics.line(0,b.y+b.h,cvsw,b.y+b.h)
+		love.graphics.line(b.x,0,b.x,cvsh)
+		love.graphics.line(b.x+b.w,0,b.x+b.w,cvsh)
+		--for justify center
+		love.graphics.line(b.x+b.w/2,b.y,b.x+b.w/2,b.y+b.h)
+		
+	end
 	
-	love.graphics.rectangle("fill",b.x-hdlw,b.y-hdlh,hdlw,hdlh)
-	love.graphics.rectangle("line",b.x,b.y,b.w,b.h)
-	love.graphics.rectangle("fill",b.x+b.w,b.y+b.h,hdlw,hdlh)
-	-- b.text.render(b.text,b.x,b.y)
-
 	love.graphics.setColor(1.0,1.0,1.0,1.0)
 	-- simpletextrender(b)
 	justifiedtextrender(b)
@@ -365,8 +411,8 @@ function createtbox(x,y,w,h)
 	ret.line=1
 	ret.char=0
 	ret.tzoom=dfltzoom
-	-- ret.justif=jleft
-	ret.justif=jright
+	ret.justif=jleft
+	-- ret.justif=jright
 	maintainlpl(ret)
 	
 	

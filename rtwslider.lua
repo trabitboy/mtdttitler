@@ -1,4 +1,4 @@
-local dfltzoom=0.2
+local dfltrtw=0.5
 
 local sheight=300
 local swidth=20
@@ -28,37 +28,33 @@ local function drag(s,dx,dy)
 		end	
 		
 		
-		if boxfocus~=nil then
-			boxfocus.tzoom=s.value
-			maintainlpl(boxfocus)
-		end
-
+		updatertw(s)
 end
 
-function sclick(s,mx,my)
+
+function updatertw(s)
+	rtw=tw*s.value
+end
+
+function rtwsclick(s,mx,my)
 	if mx >= s.x and mx<s.x+swidth and my >= s.y and my<s.y+sheight then
 		
 		s.value= (my-s.y)/sheight 
 		
-		if boxfocus~=nil then
-			boxfocus.tzoom=s.value
-		
-		end
-		
+		updatertw(s)
 		registerdrag=s
-		
 		
 		return true
 	end
 end
 
-function createslider(x,y)
+function creatertwslider(x,y)
 	ret={}
 	ret.x=x
 	ret.y=y
 	ret.render=render
-	ret.click=sclick
-	ret.value=dfltzoom
+	ret.click=rtwsclick
+	ret.value=dfltrtw
 	ret.drag=drag
 	return ret
 end

@@ -1,4 +1,7 @@
 
+
+snapmargin=64
+
 --justification
 jleft='l'
 jright='r'
@@ -16,6 +19,58 @@ hdlh=32
 --for text
 dfltzoom =0.3
 
+local function applysnap(b)
+	if b.snap then
+		if b.snap.x then 
+			b.x=b.snap.x
+		else
+			--left and right snap mutually exclusive
+			if b.snap.right then
+				b.x=b.snap.right-b.w
+			
+			end
+		end
+	
+	end
+end
+
+
+local function checkforsnap(b,w)
+	local pot=false
+	ret={}
+	if b.x < w.x+snapmargin and b.x>w.x-snapmargin and b.x~=w.x then
+		pot=true
+		ret.x=w.x
+	elseif b.x+b.w < w.x+w.w+snapmargin and b.x+b.w > w.x+w.w-snapmargin and b.x+b.w~=w.x+w.w then
+		pot=true
+		ret.right=w.x+w.w
+	end
+
+	if pot==true then
+		b.snap=ret
+		return true
+	else
+		b.snap=nil
+	end
+end
+
+-- each time we resize or move we check if there is a snap possibility within
+-- margin , when mouse released, we use it if not nil
+-- TODO if equals = already snapped, skip detected snap (false positive)
+local function detectsnap(b)
+	for i,w in ipairs(widgets)
+	do
+		if w~=b and w.type=='tbox' then
+			found=checkforsnap(b,w)
+			if found==true then
+				break
+			end
+		end
+	
+	end
+	
+end
+
 local function drag(b,dx,dy)
 	if b.mode=="drag" then
 		b.x=b.x+dx
@@ -26,6 +81,9 @@ local function drag(b,dx,dy)
 		b.h=b.h+dy
 		maintainlpl(b)
 	end
+	
+	detectsnap(b)
+	
 end
 
 --if consumed returns true
@@ -54,6 +112,16 @@ local function click(b,mx,my)
 		
 	if mx >= b.x and mx<b.x+b.w and my >= b.y and my<b.y+b.h then
 		print("click detected on id "..b.id)
+		--before taking focus let s check focus 
+		if copywcb==true then
+			if boxfocus~=nil then
+				boxfocus.w=b.w
+				maintainlpl(boxfocus)
+				msg.postmsg(msg,"w copied")
+				copywcb=nil
+				return true
+			end
+		end
 		
 		boxfocus=b
 		zoom.value=b.tzoom
@@ -92,6 +160,18 @@ local function editkey(b,key)
 	
 		if b.buffer[b.line]:len()==1 then 
 			b.buffer[b.line]=""
+			b.char=1
+		elseif b.buffer[b.line]:len()==0 then
+			table.remove(b.buffer,b.line)
+			b.line=b.line-1
+		elseif b.line ==1 and b.char==0 then
+			--do nothing 
+			return
+		elseif b.char==0 then -- begin of line, we need to merge buffer with previous
+			b.buffer[b.line-1]=b.buffer[b.line-1]..b.buffer[b.line]
+			table.remove(b.buffer,b.line)
+			b.line=b.line-1
+			
 		else
 			-- b.buffer[b.line]=b.buffer[b.line]:sub(1, -2)
 			print("before "..b.buffer[b.line])
@@ -102,19 +182,21 @@ local function editkey(b,key)
 			print("nend "..nend)
 			b.buffer[b.line]=nbeg..nend
 			print("after "..b.buffer[b.line])
+			b.char=b.char-1
 		end
-		b.char=b.char-1
 	end
 	if key=='left' then
 		if b.char>0 then
 			b.char=b.char-1
 		print("char "..b.char)
-			
+		msg.postmsg(msg,"char "..b.char)
+		
 		end
 	end
 	if key=='right' then
 		if b.char<string.len(b.buffer[b.line]) then
 			b.char=b.char+1
+			msg.postmsg(msg,"char "..b.char)
 		end
 	end
 	if key=='up' then
@@ -185,15 +267,16 @@ local function writeseg(seg,b,x,linetotal)
 		else
 			love.graphics.draw(typo['unknown'].pic,b.x+x,b.y+y,0,b.tzoom,b.tzoom)			
 		end
+		-- draw a cursor like square
+		if curline==b.line and linetotal==b.char and renderdecos==true then
+			love.graphics.setColor(1.0,1.0,1.0,0.2)
+			love.graphics.rectangle("fill",b.x+x+(tw-rtw)*b.tzoom/2,b.y+y,rtw*b.tzoom,th*b.tzoom)
+			love.graphics.setColor(1.0,1.0,1.0,1.0)
+		end
+
 		x=x+rtw*b.tzoom
 		
 		linetotal=linetotal+1
-		-- draw a cursor like square
-		if curline==b.line and linetotal==b.char then
-			love.graphics.setColor(1.0,1.0,1.0,0.2)
-			love.graphics.rectangle("fill",b.x+x+rtw*b.tzoom/2,b.y+y,rtw*b.tzoom,th*b.tzoom)
-			love.graphics.setColor(1.0,1.0,1.0,1.0)
-		end
 
 		
 	end
@@ -227,10 +310,36 @@ local function justifiedtextrender(b)
 
 		--we get real lines
 		local rls=simplecprlfl(b.lpl,l)
+		
+		if tbllngth(rls)==0 then
+			x=0
+			
+			
+			if renderdecos==true then
+				--we still need to blit cursor and active line ( this is an empty line )
+				love.graphics.polygon('fill',b.x+x,b.y+y+th*b.tzoom, b.x+x+rtw*b.tzoom,b.y+y+th*b.tzoom*0.75,b.x+x+rtw*b.tzoom,b.y+y+th*b.tzoom)
+				if curline == b.line then
+					love.graphics.line(b.x,b.y+y+th*b.tzoom,b.x+b.w,b.y+y+th*b.tzoom)
+				end
+				
+				if curline==b.line then --edge case, we are on line begin
+					love.graphics.setColor(1.0,1.0,1.0,0.2)
+					love.graphics.rectangle("fill",b.x+x,b.y+y,rtw*b.tzoom,th*b.tzoom)
+					love.graphics.setColor(1.0,1.0,1.0,1.0)
+				end
+			end
+			
+			--even if line empty of rls, we need to go down
+			y=y+th*b.tzoom
+			
+			
+		end
+		
+		
 		for j,rl in ipairs(rls)
 		do
 			--draw a line under current line
-			if curline == b.line then
+			if curline == b.line and renderdecos==true then
 				love.graphics.line(b.x,b.y+y+th*b.tzoom,b.x+b.w,b.y+y+th*b.tzoom)
 			end
 			
@@ -260,11 +369,24 @@ local function justifiedtextrender(b)
 
 			end
 
-			if j==tbllngth(rls) then
-			    --draw marker on real carriage return, all seg have been drawn
-				-- love.graphics.line(b.x+x+tw*b.tzoom,b.y+y,b.x+x+tw*b.tzoom,b.y+y+th*b.tzoom)
-				x=x+(tw-rtw)/2
-				love.graphics.polygon('fill',b.x+x,b.y+y+th*b.tzoom, b.x+x+rtw*b.tzoom,b.y+y+th*b.tzoom*0.75,b.x+x+rtw*b.tzoom,b.y+y+th*b.tzoom)
+			
+			if renderdecos==true then
+				if j==tbllngth(rls) then
+					--draw marker on real carriage return, all seg have been drawn
+					-- love.graphics.line(b.x+x+tw*b.tzoom,b.y+y,b.x+x+tw*b.tzoom,b.y+y+th*b.tzoom)
+					x=x+(tw-rtw)/2
+					love.graphics.polygon('fill',b.x+x,b.y+y+th*b.tzoom, b.x+x+rtw*b.tzoom,b.y+y+th*b.tzoom*0.75,b.x+x+rtw*b.tzoom,b.y+y+th*b.tzoom)
+					
+					
+					--edge case : need also to display cursor here (out of any seg)
+					if curline==b.line and linetotal==b.char then
+						love.graphics.setColor(1.0,1.0,1.0,0.2)
+						love.graphics.rectangle("fill",b.x+x,b.y+y,rtw*b.tzoom,th*b.tzoom)
+						love.graphics.setColor(1.0,1.0,1.0,1.0)
+					end
+					
+				end
+			
 			end
 			
 			--real line finished ! automatic cr
@@ -351,6 +473,7 @@ local function tbrender(b)
 		love.graphics.setColor(1.0,0.0,0.0,1.0)
 	end
 	
+	
 	if renderdecos==true then
 		love.graphics.setLineWidth(3)
 		love.graphics.rectangle("fill",b.x-hdlw,b.y-hdlh,hdlw,hdlh)
@@ -365,15 +488,29 @@ local function tbrender(b)
 		love.graphics.line(b.x+b.w,0,b.x+b.w,cvsh)
 		--for justify center
 		love.graphics.line(b.x+b.w/2,b.y,b.x+b.w/2,b.y+b.h)
-		
+	
+		--render potential snap
+		if b.snap then
+			love.graphics.setLineWidth(4)
+			if b.snap.x then
+				love.graphics.setColor(0.0,1.0,1.0,1.0)
+				love.graphics.line(b.snap.x,0,b.snap.x,cvsh)				
+			end
+			if b.snap.right then
+				love.graphics.setColor(0.0,1.0,1.0,1.0)
+				love.graphics.line(b.snap.right,0,b.snap.right,cvsh)				
+			end
+			love.graphics.setLineWidth(1)
+			
+		end
+		love.graphics.setColor(1.0,1.0,1.0,1.0)
+		love.graphics.print(b.id,b.x-hdlw,b.y-hdlh)
 	end
 	
 	love.graphics.setColor(1.0,1.0,1.0,1.0)
 	-- simpletextrender(b)
 	justifiedtextrender(b)
 	
-	love.graphics.setColor(1.0,1.0,1.0,1.0)
-	love.graphics.print(b.id,b.x-hdlw,b.y-hdlh)
 
 end
 
@@ -390,6 +527,8 @@ end
 function createtbox(x,y,w,h)
 	ret={}
 	
+	ret.type='tbox' --used to identify targets for snap
+	
 	wcount=wcount+1
 	
 	ret.id=wcount
@@ -397,7 +536,7 @@ function createtbox(x,y,w,h)
 	ret.y=y
 	ret.w=w
 	ret.h=h
-	ret.fh=16
+	ret.fh=16-- seems unused ?
 	
 	ret.render=tbrender
 	ret.click=click
@@ -412,6 +551,9 @@ function createtbox(x,y,w,h)
 	ret.char=0
 	ret.tzoom=dfltzoom
 	ret.justif=jleft
+
+	ret.snap=nil
+	ret.dragrelease=applysnap
 	-- ret.justif=jright
 	maintainlpl(ret)
 	

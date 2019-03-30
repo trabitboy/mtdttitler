@@ -1,5 +1,21 @@
---multiline support (add line on enter)
--- when softcompose mix new color with old color !
+-- BUG in line break, if word to big, empty rl inserted
+
+
+--WIP load save
+--whole state to load save
+
+--TODO load save screen with folders
+--TODO save and restore, maybe separate thumb screen? pic and data saved ?
+
+--WIP snap
+-- on left or right
+--TODO snap on up down
+-- copy width copy height copy zoom button ?
+--TODO disable snap  ( toggle button )
+
+
+
+
 
 require("conf")
 
@@ -55,8 +71,10 @@ require("picbutton")
 -- require("ta")
 require("tbox")
 require("slider")
+require("rtwslider")
 require("cprlfl")
-
+require("save")
+require("msgbox")
 
 -- test=splitwordandspace("caca pipi zaz prout ")
 -- for i,s in ipairs (test)
@@ -126,6 +144,20 @@ wcount=0
 			end
 		end
 	
+	
+	function copywidthmode()
+	
+		if copywcb==nil then
+			msg.postmsg(msg,"copy width mode, click other box, reclick button to cancel",true)
+			copywcb=true
+		else 
+			copywcb=nil
+			msg.postmsg(msg,"copy width mode canceled")
+		end
+		
+	end
+	
+	
 	function love.load()
 	
 		savefld=love.filesystem.getSaveDirectory()
@@ -181,7 +213,16 @@ wcount=0
 		table.insert(widgets,first)
 		boxfocus=first
 		
-	
+		rtwslide=creatertwslider(cvsw-40,300)		
+		table.insert(widgets,rtwslide)
+
+		msg=createmsgbox(600,10)
+		table.insert(widgets,msg)
+
+		copyw=createpicbutton(200,cvsh-50,"copywidth.png",copywidthmode )
+		table.insert(widgets,copyw)
+
+		
 	end
 
 	
@@ -205,12 +246,18 @@ end
 
 love.mousemoved=function( x, y, dx, dy, istouch )
 	if registerdrag~=nil then
-			registerdrag.drag(registerdrag,dx,dy)
+			registerdrag.drag(registerdrag,dx/scrsx,dy/scrsy)
 	end
 end
 
 love.mousereleased = function(x, y, button)
 
+	if registerdrag~=nil then
+		if registerdrag.dragrelease then
+			registerdrag.dragrelease(registerdrag)
+		end
+	end
+	
 	registerdrag=nil
 end
 
@@ -228,6 +275,16 @@ love.keypressed = function(key, code, isrepeat)
 	
 	if key=="f1" then
 		renderdecos= not renderdecos
+	end
+	
+	if key=="f2" then
+		msg.postmsg(msg,"save")
+		savegui()
+	end
+	
+	if key=="f3" then
+		msg.postmsg(msg,"load")
+		loadgui()
 	end
 	
 end
@@ -295,8 +352,10 @@ function rendergui()
 	
 	end
 	
+	-- love.graphics.print("toto",100,100)
+	
 	--for debug,last click
-	if npx~=nil then
+	if npx~=nil and renderdecos==true then
 		love.graphics.circle("fill",npx,npy,10)
 	end
 	

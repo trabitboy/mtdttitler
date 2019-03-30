@@ -34,13 +34,30 @@ function simplecprlfl(lpl,l)
 		-- print(s.val)
 		-- print(s.type)
 		if s.val:len()+counttotal>lpl then
-			counttotal=0
-			line={}
-			table.insert(ret,line)
+			-- we overflow line
+		
+			--TODO this is what inserts empty lines
+			--TODO unclear 
+		
+			if tbllngth(line)>0 then
+				--if not first segment of line, we go to next line
+				counttotal=0
+				line={}
+				table.insert(ret,line)
+				--we add on next line
+				table.insert(line,s)		
+				counttotal=counttotal+s.val:len()
+			else
+				--we go over it, but only word of line !!! we keep it
+				table.insert(line,s)		
+				counttotal=counttotal+s.val:len()
+			end
+			
+		else
+			--we dont overflow, easy 
+			table.insert(line,s)		
+			counttotal=counttotal+s.val:len()
 		end
-
-		table.insert(line,s)		
-		counttotal=counttotal+s.val:len()
 	end
 	
 	return ret

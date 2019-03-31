@@ -31,6 +31,15 @@ local function applysnap(b)
 			end
 		end
 	
+		if b.snap.y then 
+			b.x=b.snap.y
+		else
+			--left and right snap mutually exclusive
+			if b.snap.down then
+				b.y=b.snap.down-b.h
+			
+			end
+		end
 	end
 end
 
@@ -45,6 +54,16 @@ local function checkforsnap(b,w)
 		pot=true
 		ret.right=w.x+w.w
 	end
+
+
+	if b.y < w.y+snapmargin and b.y>w.y-snapmargin and b.y~=w.y then
+		pot=true
+		ret.y=w.y
+	elseif b.y+b.h < w.y+w.h+snapmargin and b.y+b.h > w.y+w.h-snapmargin and b.x+b.w~=w.y+w.h then
+		pot=true
+		ret.down=w.y+w.h
+	end
+
 
 	if pot==true then
 		b.snap=ret
@@ -499,6 +518,14 @@ local function tbrender(b)
 			if b.snap.right then
 				love.graphics.setColor(0.0,1.0,1.0,1.0)
 				love.graphics.line(b.snap.right,0,b.snap.right,cvsh)				
+			end
+			if b.snap.y then
+				love.graphics.setColor(0.0,1.0,1.0,1.0)
+				love.graphics.line(0,b.snap.y,cvsw,b.snap.y)				
+			end
+			if b.snap.down then
+				love.graphics.setColor(0.0,1.0,1.0,1.0)
+				love.graphics.line(0,b.snap.down,cvsw,b.snap.down)				
 			end
 			love.graphics.setLineWidth(1)
 			

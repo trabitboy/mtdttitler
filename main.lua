@@ -1,5 +1,4 @@
--- BUG in line break, if word to big, empty rl inserted
-
+--TODO button to disable snap
 
 --WIP load save
 --whole state to load save

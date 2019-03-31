@@ -32,7 +32,7 @@ local function applysnap(b)
 		end
 	
 		if b.snap.y then 
-			b.x=b.snap.y
+			b.y=b.snap.y
 		else
 			--left and right snap mutually exclusive
 			if b.snap.down then

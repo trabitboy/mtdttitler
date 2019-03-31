@@ -30,7 +30,7 @@ cvsh=1080
  scrsy=wh/cvsh
   
  
- love.window.setTitle("mtdt titler")
+ love.window.setTitle("love2d titler")
  --r to tex
 	mylt=love.graphics.newCanvas(cvsw,cvsh)
 
